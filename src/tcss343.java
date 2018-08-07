@@ -6,30 +6,48 @@ import java.util.Random;
 
 public class tcss343 {
 
+    /**
+     * Random generator that uses the time at application start as the seed.
+     */
     private static final Random RANDOM_GENERATOR = new Random(System.currentTimeMillis());
 
+    /**
+     * Minimum value we to be returned by the generator.
+     */
     private static final int MIN_BOUND = 1;
+
+    /**
+     * Maximum value to be returned by the generator.
+     */
     private static final int MAX_BOUND = 1000;
 
+    /**
+     * Generate a random integer from MIN_BOUND to MAX_BOUND (inclusive).
+     *
+     * @return a random integer
+     */
     private static int generateInteger() {
         return RANDOM_GENERATOR.nextInt((MAX_BOUND - MIN_BOUND) + 1) + MIN_BOUND;
     }
 
-    /*
-    An algorithm to find the cheapest sequence of posts to rent and return from using
-    the dynamic programming paradigm.
+    /**
+     * An algorithm to find the cheapest sequence of posts to rent and return from using
+     * the dynamic programming paradigm.
+     *
+     * @param costChart the cost chart
+     * @return the cheapest sequence of rentals
      */
-    private static List<Integer> findCheapestRentalSequenceDynamic(Integer[][] cost) {
+    private static List<Integer> findCheapestRentalSequenceDynamic(Integer[][] costChart) {
         // Initialize minCost and path arrays with length equal to the number of posts (e.g. cost.length).
-        int[] minCost = new int[cost.length];
-        int[] path = new int[cost.length];
+        int[] minCost = new int[costChart.length];
+        int[] path = new int[costChart.length];
         // Fill minCost with max value.
         Arrays.fill(minCost, Integer.MAX_VALUE);
         // Initialize the base case (-1 for the end with a cost of 0).
         path[0] = -1;
         minCost[0] = 0;
         // Iterate over posts 1 to n.
-        for (int j = 1; j < cost.length; j++) {
+        for (int j = 1; j < costChart.length; j++) {
             // Iterate posts 0 to j - 1.
             for (int i = 0; i < j; i++) {
                 /*
@@ -37,8 +55,8 @@ public class tcss343 {
                  minimum cost to point j replace the min cost to j with the new minimum cost
                  and set the path at index j to i.
                   */
-                if (minCost[i] + cost[i][j] < minCost[j]) {
-                    minCost[j] = minCost[i] + cost[i][j];
+                if (minCost[i] + costChart[i][j] < minCost[j]) {
+                    minCost[j] = minCost[i] + costChart[i][j];
                     path[j] = i;
                 }
             }
@@ -47,7 +65,7 @@ public class tcss343 {
         // Initialize our sequence list.
         List<Integer> sequence = new ArrayList<>();
         // Initialize index equal to the number of posts minus 1.
-        int i = cost.length - 1;
+        int i = costChart.length - 1;
         /*
         Check if the value at index i of the path array is our sentinel value. If not add the index to
         our sequence list and update our i to the value.
@@ -64,22 +82,41 @@ public class tcss343 {
         return sequence;
     }
 
+    /**
+     * Creates a cost table of size n by n and populates the table using
+     * the given generation mode.
+     *
+     * @param n the dimension of the table
+     * @param mode the generation mode
+     * @return
+     */
     public static Integer[][] generateCostTable(int n, GenerationMode mode) {
-        Random random = new Random(System.currentTimeMillis());
+        // Create a table of size n by n
         Integer[][] table = new Integer[n][n];
 
+        // Iterate from row 0 to n
         for (int i = 0; i < n; i++) {
+            // Iterate from column i to n for the current row
             for (int j = i; j < n; j++) {
-                mode.generateNumber(table, i, j);
+                // Fill the current index with a generated value
+                mode.fill(table, i, j);
             }
         }
 
         return table;
     }
 
+    /**
+     * Dynamic programming algorithm test that finds the cheapest sequence
+     * of rentals and prints it to the console.
+     *
+     * @param costChart the cost chart
+     */
     public static void testDynamic(Integer[][] costChart) {
+        // Find the cheapest sequence for the provided cost chart
         List<Integer> sequence = findCheapestRentalSequenceDynamic(costChart);
 
+        // Generate string representation of the sequence
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < sequence.size(); i++) {
             if (builder.length() > 0) {
@@ -89,37 +126,67 @@ public class tcss343 {
             builder.append(sequence.get(i));
         }
 
+        // Print the sequence
         System.out.println(String.format("Cheapest sequence: [%s]", builder.toString()));
     }
 
+    /**
+     * Entry point for this program.
+     *
+     * @param args program arguments
+     */
     public static void main(String... args) {
+        // Dynamic programming algorithm test configurations
         testDynamic(generateCostTable(800, GenerationMode.RANDOM));
         testDynamic(generateCostTable(800, GenerationMode.DEPENDENT));
     }
 
     public enum GenerationMode {
+        /**
+         * Generates a random number.
+         */
         RANDOM {
-            public void fill(Integer[][] table, int i, int j) {
-                table[i][j] = generateInteger();
+            public int nextInt(Integer[][] table, int row, int column) {
+                return generateInteger();
             }
         },
+        /**
+         * Generates a random number and adds the previous value
+         * of the corresponding row to that number.
+         */
         DEPENDENT {
-            public void fill(Integer[][] table, int i, int j) {
-                table[i][j] = generateInteger();
-                if (table[i][j - 1] != null) {
-                    table[i][j] += table[i][j - 1];
+            public int nextInt(Integer[][] table, int row, int column) {
+                int val = generateInteger();
+                if (table[row][column - 1] != null) {
+                    table[row][column] += table[row][column - 1];
                 }
+                return val;
             }
         };
 
-        public abstract void fill(Integer[][] table, int i, int j);
+        /**
+         * Generates an integer from the given table, row, and column.
+         *
+         * @param table the table
+         * @param row the row index
+         * @param column the column index
+         */
+        public abstract int nextInt(Integer[][] table, int row, int column);
 
-        public void generateNumber(Integer[][] table, int i, int j) {
-            if (i == j) {
-                table[i][j] = 0;
+        /**
+         * Generates a number and populates the table at the corresponding
+         * indices with the generated number.
+         *
+         * @param table the table
+         * @param row the row index
+         * @param column the column index
+         */
+        public void fill(Integer[][] table, int row, int column) {
+            if (row == column) {
+                table[row][column] = 0;
             } else {
-                while (table[i][j] == null || table[i][j] <= 0) {
-                    fill(table, i, j);
+                while (table[row][column] == null || table[row][column] <= 0) {
+                    table[row][column] = nextInt(table, row, column);
                 }
             }
         }
