@@ -158,7 +158,7 @@ public class tcss343 {
             public int nextInt(Integer[][] table, int row, int column) {
                 int val = generateInteger();
                 if (table[row][column - 1] != null) {
-                    table[row][column] += table[row][column - 1];
+                    val += table[row][column - 1];
                 }
                 return val;
             }
