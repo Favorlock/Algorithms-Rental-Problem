@@ -196,5 +196,34 @@ public class tcss343 {
             }
         }
     }
+public Result conq(int[][] path, int index, int costcurrent) {
+	if(path.length-1 == index) {
+		return new Result(new ArrayList<Integer>() {{
+			add(index);
+		}}, costcurrent);
+	}else {
+		Result cheap = null;
+		
+		for(int i = index+1; i < path.length;i++) {
+			Result result = conq(path, index+1,costcurrent+path[index][i]);
+			if (cheap == null || result.totalCost < cheap.totalCost) {
+				cheap = result;
+			}
+		}
+		
+		cheap.sequence.add(index);
+		return cheap;
+	}
+	}
 
+	
+	public class Result{
+		public List<Integer> sequence;
+		public int totalCost;
+		
+		public Result(List<Integer> sequence, int cost) {
+			this.sequence = sequence;
+			totalCost = cost;
+		}
+	}
 }
