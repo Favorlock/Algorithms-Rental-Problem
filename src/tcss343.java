@@ -4,6 +4,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * TCSS 343 Assignment 4.
+ *
+ * @author Evan Lindsay, Mary Fitzgerald
+ */
 public class tcss343 {
 
     /**
