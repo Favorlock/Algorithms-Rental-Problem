@@ -35,14 +35,37 @@ public class tcss343 {
         return RANDOM_GENERATOR.nextInt((MAX_BOUND - MIN_BOUND) + 1) + MIN_BOUND;
     }
 
+    private static Result findCheapestRentalSequenceDivideConquer(Integer[][] costTable) {
+        return findCheapestRentalSequenceDivideConquer(costTable, 0, 0);
+    }
+
+    private static Result findCheapestRentalSequenceDivideConquer(Integer[][] costTable, int currentIndex, int currentCost) {
+        if (costTable.length - 1 == currentIndex) {
+            return new Result(new ArrayList<>(Arrays.asList(currentIndex)), currentCost);
+        } else {
+            Result cheapestResult = null;
+
+            for (int i = currentIndex + 1; i < costTable.length; i++) {
+                Result result = findCheapestRentalSequenceDivideConquer(costTable, i, currentCost + costTable[currentIndex][i]);
+                if (cheapestResult == null || result.totalCost < cheapestResult.totalCost) {
+                    cheapestResult = result;
+                }
+            }
+
+            cheapestResult.sequence.add(0, currentIndex);
+            return cheapestResult;
+        }
+    }
+
     /**
      * An algorithm to find the cheapest sequence of posts to rent and return from using
      * the dynamic programming paradigm.
      *
      * @param costChart the cost chart
+     *
      * @return the cheapest sequence of rentals
      */
-    private static List<Integer> findCheapestRentalSequenceDynamic(Integer[][] costChart) {
+    private static Result findCheapestRentalSequenceDynamic(Integer[][] costChart) {
         // Initialize minCost and path arrays with length equal to the number of posts (e.g. cost.length).
         int[] minCost = new int[costChart.length];
         int[] path = new int[costChart.length];
@@ -84,15 +107,16 @@ public class tcss343 {
         // Reverse the sequence list so that it is in order from start to finish.
         Collections.reverse(sequence);
 
-        return sequence;
+        return new Result(sequence, minCost[costChart.length - 1]);
     }
 
     /**
      * Creates a cost table of size n by n and populates the table using
      * the given generation mode.
      *
-     * @param n the dimension of the table
+     * @param n    the dimension of the table
      * @param mode the generation mode
+     *
      * @return
      */
     public static Integer[][] generateCostTable(int n, GenerationMode mode) {
@@ -112,6 +136,24 @@ public class tcss343 {
     }
 
     /**
+     * Divide and conquer algorithm test that finds the cheapest sequence
+     * of rentals and prints it to the console.
+     *
+     * @param costChart the cost chart
+     */
+    public static void testDivideConquer(Integer[][] costChart) {
+        // Find the cheapest sequence for the provided cost chart
+        Result result = findCheapestRentalSequenceDivideConquer(costChart);
+
+        // Print the sequence
+        StringBuilder builder = new StringBuilder().append("Divide and Conquer Algorithm:\n")
+                .append("Size: %s\n")
+                .append("Total Cost: %s\n")
+                .append("Sequence: %s");
+        System.out.println(String.format(builder.toString(), costChart.length, result.totalCost, serializeResultSequence(result)));
+    }
+
+    /**
      * Dynamic programming algorithm test that finds the cheapest sequence
      * of rentals and prints it to the console.
      *
@@ -119,20 +161,28 @@ public class tcss343 {
      */
     public static void testDynamic(Integer[][] costChart) {
         // Find the cheapest sequence for the provided cost chart
-        List<Integer> sequence = findCheapestRentalSequenceDynamic(costChart);
+        Result result = findCheapestRentalSequenceDynamic(costChart);
 
+        // Print the sequence
+        StringBuilder builder = new StringBuilder().append("Dynamic Programming Algorithm:\n")
+                .append("Size: %s\n")
+                .append("Total Cost: %s\n")
+                .append("Sequence: %s");
+        System.out.println(String.format(builder.toString(), costChart.length, result.totalCost, serializeResultSequence(result)));
+    }
+
+    public static String serializeResultSequence(Result result) {
         // Generate string representation of the sequence
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < sequence.size(); i++) {
+        for (int i = 0; i < result.sequence.size(); i++) {
             if (builder.length() > 0) {
                 builder.append("->");
             }
 
-            builder.append(sequence.get(i));
+            builder.append(result.sequence.get(i));
         }
 
-        // Print the sequence
-        System.out.println(String.format("Cheapest sequence: [%s]", builder.toString()));
+        return builder.toString();
     }
 
     /**
@@ -141,9 +191,20 @@ public class tcss343 {
      * @param args program arguments
      */
     public static void main(String... args) {
-        // Dynamic programming algorithm test configurations
-        testDynamic(generateCostTable(800, GenerationMode.RANDOM));
-        testDynamic(generateCostTable(800, GenerationMode.DEPENDENT));
+        Integer[][] tableSizeFourRandom = generateCostTable(4, GenerationMode.RANDOM);
+        Integer[][] tableSizeFourDependent = generateCostTable(4, GenerationMode.DEPENDENT);
+
+        System.out.println("+================= RANDOM =================+");
+
+        testDivideConquer(tableSizeFourRandom);
+        testDynamic(tableSizeFourRandom);
+
+        System.out.println("+================ DEPENDENT ===============+");
+
+        testDivideConquer(tableSizeFourDependent);
+        testDynamic(tableSizeFourDependent);
+
+        System.out.println("+==========================================+");
     }
 
     public enum GenerationMode {
@@ -172,8 +233,8 @@ public class tcss343 {
         /**
          * Generates an integer from the given table, row, and column.
          *
-         * @param table the table
-         * @param row the row index
+         * @param table  the table
+         * @param row    the row index
          * @param column the column index
          */
         public abstract int nextInt(Integer[][] table, int row, int column);
@@ -182,8 +243,8 @@ public class tcss343 {
          * Generates a number and populates the table at the corresponding
          * indices with the generated number.
          *
-         * @param table the table
-         * @param row the row index
+         * @param table  the table
+         * @param row    the row index
          * @param column the column index
          */
         public void fill(Integer[][] table, int row, int column) {
@@ -196,34 +257,16 @@ public class tcss343 {
             }
         }
     }
-public Result conq(int[][] path, int index, int costcurrent) {
-	if(path.length-1 == index) {
-		return new Result(new ArrayList<Integer>() {{
-			add(index);
-		}}, costcurrent);
-	}else {
-		Result cheap = null;
-		
-		for(int i = index+1; i < path.length;i++) {
-			Result result = conq(path, index+1,costcurrent+path[index][i]);
-			if (cheap == null || result.totalCost < cheap.totalCost) {
-				cheap = result;
-			}
-		}
-		
-		cheap.sequence.add(index);
-		return cheap;
-	}
-	}
 
-	
-	public class Result{
-		public List<Integer> sequence;
-		public int totalCost;
-		
-		public Result(List<Integer> sequence, int cost) {
-			this.sequence = sequence;
-			totalCost = cost;
-		}
-	}
+    public static class Result {
+
+        private List<Integer> sequence;
+        private int totalCost;
+
+        public Result(List<Integer> sequence, int totalCost) {
+            this.sequence = sequence;
+            this.totalCost = totalCost;
+        }
+
+    }
 }
