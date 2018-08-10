@@ -27,6 +27,9 @@ public class tcss343 {
      */
     private static final int MAX_BOUND = 1000;
 
+    /**
+     * BigInteger for the value 2.
+     */
     private static final BigInteger TWO = new BigInteger("2");
 
     /**
@@ -325,6 +328,9 @@ public class tcss343 {
 //        }
     }
 
+    /**
+     * Enum that allows for custom random int generation logic for each value.
+     */
     public enum GenerationMode {
         /**
          * Generates a random number.
