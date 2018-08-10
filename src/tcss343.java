@@ -62,53 +62,50 @@ public class tcss343 {
         List<Integer> cheapestSequence = null;
         int cheapestCost = -1;
 
+        if (!counter.testBit(0)) {
+            counter = counter.add(BigInteger.ONE);
+        }
+
         // Iterate from 0 to powerSetSize - 1;
         while (counter.compareTo(powerSetSize) < 0) {
-            /*
-             Test if bits 0 and costTable.length - 1 are set. We know that only
-             one fourth of the sets that make up the power set contain both the start
-             and end points of the cost table, thus we can avoid checking every sub set.
-              */
-            if (counter.testBit(0) && counter.testBit(costTable.length - 1)) {
-                // Create our sequence list and add the start index as the base case.
-                List<Integer> sequence = new ArrayList<>();
-                sequence.add(0);
+            // Create our sequence list and add the start index as the base case.
+            List<Integer> sequence = new ArrayList<>();
+            sequence.add(0);
 
-                // Keep track of the totalCost and the previously checked post.
-                int totalCost = 0;
-                int previous = 0;
+            // Keep track of the totalCost and the previously checked post.
+            int totalCost = 0;
+            int previous = 0;
 
-                // Iterate over all posts between the start and end.
-                for (int j = 1; j < costTable.length - 1; j++) {
-                    // Check if the bit in the counter is set for post j.
-                    if (counter.testBit(j)) {
-                        // Add the cost from the previous post to post j to the total cost.
-                        totalCost += costTable[previous][j];
-                        // Set the previous post to j.
-                        previous = j;
-                        // Add post j to the sequence list.
-                        sequence.add(j);
-                    }
+            // Iterate over all posts between the start and end.
+            for (int j = 1; j < costTable.length - 1; j++) {
+                // Check if the bit in the counter is set for post j.
+                if (counter.testBit(j)) {
+                    // Add the cost from the previous post to post j to the total cost.
+                    totalCost += costTable[previous][j];
+                    // Set the previous post to j.
+                    previous = j;
+                    // Add post j to the sequence list.
+                    sequence.add(j);
                 }
+            }
 
-                // Add the cost from the previous post to the end post to the total cost.
-                totalCost += costTable[previous][costTable.length - 1];
-                // Add the end post to the sequence list.
-                sequence.add(costTable.length - 1);
+            // Add the cost from the previous post to the end post to the total cost.
+            totalCost += costTable[previous][costTable.length - 1];
+            // Add the end post to the sequence list.
+            sequence.add(costTable.length - 1);
 
                 /*
                  Check if the cheapestCost has yet to be set or if the total cost of the latest sequence
                  is cheaper than the cost of the cheapest sequence.
                   */
-                if (cheapestCost == -1 || totalCost < cheapestCost) {
-                    // Set the new cheapest sequence and cheapest cost.
-                    cheapestSequence = sequence;
-                    cheapestCost = totalCost;
-                }
+            if (cheapestCost == -1 || totalCost < cheapestCost) {
+                // Set the new cheapest sequence and cheapest cost.
+                cheapestSequence = sequence;
+                cheapestCost = totalCost;
             }
 
             // Increment the counter.
-            counter = counter.add(BigInteger.ONE);
+            counter = counter.add(TWO);
         }
 
         return new Result(cheapestSequence, cheapestCost);
