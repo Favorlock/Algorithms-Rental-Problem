@@ -65,6 +65,7 @@ public class tcss343 {
         List<Integer> cheapestSequence = null;
         int cheapestCost = -1;
 
+        // Check if counter is even, if so increment by one.
         if (!counter.testBit(0)) {
             counter = counter.add(BigInteger.ONE);
         }
