@@ -1,7 +1,7 @@
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -51,15 +51,15 @@ public class tcss343 {
      */
     private static Result findCheapestRentalSequenceBruteForce(Integer[][] costTable) {
         /*
-         We first calculate the size of the power set. It is important to use
-         BigInteger because the power set size very quickly exceeds Integer.MAX_VALUE.
-          */
+        We first calculate the size of the power set. It is important to use
+        BigInteger because the power set size very quickly exceeds Integer.MAX_VALUE.
+         */
         BigInteger powerSetSize = TWO.pow(costTable.length);
         /*
-         Create a counter as a BigInteger to support loops of sizes greater than Integer.MAX_VALUE.
-         Because we need bit costTable.length - 1 to be set we know that our counter can start at
-         2^(costTable.length - 1).
-          */
+        Create a counter as a BigInteger to support loops of sizes greater than Integer.MAX_VALUE.
+        Because we need bit costTable.length - 1 to be set we know that our counter can start at
+        2^(costTable.length - 1).
+         */
         BigInteger counter = TWO.pow(costTable.length - 1);
 
         List<Integer> cheapestSequence = null;
@@ -70,7 +70,7 @@ public class tcss343 {
             counter = counter.add(BigInteger.ONE);
         }
 
-        // Iterate from 0 to powerSetSize - 1;
+        // Iterate over all odd numbers from 2^(costTable.length - 1) to 2^costTable.length
         while (counter.compareTo(powerSetSize) < 0) {
             // Create our sequence list and add the start index as the base case.
             List<Integer> sequence = new ArrayList<>();
@@ -98,10 +98,10 @@ public class tcss343 {
             // Add the end post to the sequence list.
             sequence.add(costTable.length - 1);
 
-                /*
-                 Check if the cheapestCost has yet to be set or if the total cost of the latest sequence
-                 is cheaper than the cost of the cheapest sequence.
-                  */
+            /*
+            Check if the cheapestCost has yet to be set or if the total cost of the latest sequence
+            is cheaper than the cost of the cheapest sequence.
+             */
             if (cheapestCost == -1 || totalCost < cheapestCost) {
                 // Set the new cheapest sequence and cheapest cost.
                 cheapestSequence = sequence;
@@ -131,25 +131,31 @@ public class tcss343 {
      * An algorithm to find the cheapest sequence of posts to rent and return from using
      * the divide and conquer paradigm.
      *
-     * @param costTable the cost chart
+     * @param costTable    the cost chart
      * @param currentIndex the current post
-     * @param currentCost the total cost up to this post
+     * @param currentCost  the total cost up to this post
      *
      * @return the cheapest sequence of rentals starting from the current post to the end
      */
     private static Result findCheapestRentalSequenceDivideConquer(Integer[][] costTable, int currentIndex, int currentCost) {
         if (costTable.length - 1 == currentIndex) {
-            return new Result(new ArrayList<>(Arrays.asList(currentIndex)), currentCost);
+            // The end has been reached.
+            List list = new LinkedList();
+            list.add(currentIndex);
+            return new Result(list, currentCost);
         } else {
             Result cheapestResult = null;
 
+            // Check all possible destinations from the current index.
             for (int i = currentIndex + 1; i < costTable.length; i++) {
                 Result result = findCheapestRentalSequenceDivideConquer(costTable, i, currentCost + costTable[currentIndex][i]);
+                // Check if the result cost less than the current cheapest result.
                 if (cheapestResult == null || result.totalCost < cheapestResult.totalCost) {
                     cheapestResult = result;
                 }
             }
 
+            // Add the current index to the beginning of cheapest result's sequence.
             cheapestResult.sequence.add(0, currentIndex);
             return cheapestResult;
         }
@@ -189,7 +195,7 @@ public class tcss343 {
         }
 
         // Initialize our sequence list.
-        List<Integer> sequence = new ArrayList<>();
+        List<Integer> sequence = new LinkedList<>();
         // Initialize index equal to the number of posts minus 1.
         int i = costTable.length - 1;
         /*
@@ -197,13 +203,11 @@ public class tcss343 {
         our sequence list and update our i to the value.
          */
         while (path[i] != -1) {
-            sequence.add(i);
+            sequence.add(0, i);
             i = path[i];
         }
         // Add the starting post to our sequence list.
-        sequence.add(i);
-        // Reverse the sequence list so that it is in order from start to finish.
-        Collections.reverse(sequence);
+        sequence.add(0, i);
 
         return new Result(sequence, minCost[costTable.length - 1]);
     }
@@ -306,24 +310,24 @@ public class tcss343 {
     public static void main(String... args) {
         int size = 25;
 //        for (int i = 0; i <= 5; i++) {
-            Integer[][] randomTable = generateCostTable(size, GenerationMode.RANDOM);
-            Integer[][] dependentTable = generateCostTable(size, GenerationMode.DEPENDENT);
+        Integer[][] randomTable = generateCostTable(size, GenerationMode.RANDOM);
+        Integer[][] dependentTable = generateCostTable(size, GenerationMode.DEPENDENT);
 
-            System.out.println("+==========================================+");
-            System.out.println(String.format("Table Size: %s", randomTable.length));
-            System.out.println("+================= RANDOM =================+");
+        System.out.println("+==========================================+");
+        System.out.println(String.format("Table Size: %s", randomTable.length));
+        System.out.println("+================= RANDOM =================+");
 
-            testBruteForce(randomTable);
-            testDivideConquer(randomTable);
-            testDynamic(randomTable);
+        testBruteForce(randomTable);
+        testDivideConquer(randomTable);
+        testDynamic(randomTable);
 
-            System.out.println("+================ DEPENDENT ===============+");
+        System.out.println("+================ DEPENDENT ===============+");
 
-            testBruteForce(dependentTable);
-            testDivideConquer(dependentTable);
-            testDynamic(dependentTable);
+        testBruteForce(dependentTable);
+        testDivideConquer(dependentTable);
+        testDynamic(dependentTable);
 
-            System.out.println("+==========================================+");
+        System.out.println("+==========================================+");
 
 //            size *= 2;
 //        }
@@ -358,9 +362,9 @@ public class tcss343 {
         /**
          * Generates an integer from the given table, row, and column.
          *
-         * @param costTable  the table
-         * @param row    the row index
-         * @param column the column index
+         * @param costTable the table
+         * @param row       the row index
+         * @param column    the column index
          */
         public abstract int nextInt(Integer[][] costTable, int row, int column);
 
@@ -368,9 +372,9 @@ public class tcss343 {
          * Generates a number and populates the table at the corresponding
          * indices with the generated number.
          *
-         * @param costTable  the table
-         * @param row    the row index
-         * @param column the column index
+         * @param costTable the table
+         * @param row       the row index
+         * @param column    the column index
          */
         public void fill(Integer[][] costTable, int row, int column) {
             if (row == column) {
@@ -394,7 +398,7 @@ public class tcss343 {
         /**
          * Constructor that takes a sequence list and total cost.
          *
-         * @param sequence the sequence
+         * @param sequence  the sequence
          * @param totalCost the cost
          */
         public Result(List<Integer> sequence, int totalCost) {
