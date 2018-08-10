@@ -27,6 +27,8 @@ public class tcss343 {
      */
     private static final int MAX_BOUND = 1000;
 
+    private static final BigInteger TWO = new BigInteger("2");
+
     /**
      * Generate a random integer from MIN_BOUND to MAX_BOUND (inclusive).
      *
@@ -49,9 +51,13 @@ public class tcss343 {
          We first calculate the size of the power set. It is important to use
          BigInteger because the power set size very quickly exceeds Integer.MAX_VALUE.
           */
-        BigInteger powerSetSize = new BigInteger("2").pow(costTable.length);
-        // Create a counter as a BigInteger to support loops of sizes greater than Integer.MAX_VALUE.
-        BigInteger counter = BigInteger.ZERO;
+        BigInteger powerSetSize = TWO.pow(costTable.length);
+        /*
+         Create a counter as a BigInteger to support loops of sizes greater than Integer.MAX_VALUE.
+         Because we need bit costTable.length - 1 to be set we know that our counter can start at
+         2^(costTable.length - 1).
+          */
+        BigInteger counter = TWO.pow(costTable.length - 1);
 
         List<Integer> cheapestSequence = null;
         int cheapestCost = -1;
