@@ -1,3 +1,9 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +38,8 @@ public class tcss343 {
      */
     private static final BigInteger TWO = new BigInteger("2");
 
+    private static final String SEPARATOR = "============================================================";
+
     /**
      * Generate a random integer from MIN_BOUND to MAX_BOUND (inclusive).
      *
@@ -39,6 +47,75 @@ public class tcss343 {
      */
     private static int generateInteger() {
         return RANDOM_GENERATOR.nextInt((MAX_BOUND - MIN_BOUND) + 1) + MIN_BOUND;
+    }
+
+    /**
+     * Reads a cost table from file.
+     *
+     * @param target the target file to read from
+     *
+     * @return a cost table
+     *
+     * @throws IOException
+     */
+    private static Integer[][] readCostTableFromFile(String target) throws IOException {
+        File file = new File(target);
+        Integer[][] costTable = null;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            int row = 0;
+
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split("\t");
+                if (costTable == null) {
+                    costTable = new Integer[parts.length][parts.length];
+                }
+
+                for (int column = row; column < parts.length; column++) {
+                    costTable[row][column] = Integer.parseInt(parts[column]);
+                }
+
+                row += 1;
+            }
+        }
+
+        return costTable;
+    }
+
+    private static void generateAndSaveCostTable(int size, GenerationMode mode) {
+        Integer[][] costTable = generateCostTable(size, mode);
+        File file = new File(String.format("./%sCostTable%s.txt", mode.name(), size));
+
+        try {
+            if (file.exists()) {
+                file.delete();
+            }
+
+            file.createNewFile();
+
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
+                for (int i = 0; i < costTable.length; i++) {
+                    for (int j = 0; j < costTable.length; j++) {
+                        if (costTable[i][j] == null) {
+                            bw.append("NA");
+                        } else {
+                            bw.append(String.valueOf(costTable[i][j]));
+                        }
+
+                        if (j < costTable.length - 1) {
+                            bw.append('\t');
+                        }
+                    }
+
+                    if (i < costTable.length - 1) {
+                        bw.append("\n");
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            System.err.println("An error occurred while writing a table to file: " + file.toString());
+        }
     }
 
     /**
@@ -303,34 +380,89 @@ public class tcss343 {
     }
 
     /**
+     * Runs tests for a provided cost table.
+     *
+     * @param costTable the table to test
+     * @param testBruteForce whether or not to test the brute force algorithm
+     * @param testDivideConquer whether or not to test the divide and conquer algorithm
+     * @param testDynamic whether or not to test the dynamic programming algorithm
+     */
+    private static void testCostTable(Integer[][] costTable, boolean testBruteForce, boolean testDivideConquer, boolean testDynamic) {
+        if (testBruteForce) {
+            testBruteForce(costTable);
+        }
+
+        if (testDivideConquer) {
+            testDivideConquer(costTable);
+        }
+
+        if (testDynamic) {
+            testDynamic(costTable);
+        }
+    }
+
+    /**
+     * Runs tests for a table loaded from a file.
+     *
+     * @param target
+     */
+    private static void testFromFile(String target) {
+        try {
+            Integer[][] costTable = readCostTableFromFile(target);
+
+            System.out.println(SEPARATOR);
+            System.out.println(String.format("Testing File: %s", target));
+            System.out.println(String.format("Table Dimension: %s", costTable.length));
+            System.out.println(SEPARATOR);
+
+            testCostTable(costTable, true, true, true);
+        } catch (Exception ex) {
+            System.err.println("An error occurred while testing from a file: " + ex.getMessage());
+        }
+    }
+
+    /**
      * Entry point for this program.
      *
      * @param args program arguments
      */
     public static void main(String... args) {
-        int size = 25;
-//        for (int i = 0; i <= 5; i++) {
-        Integer[][] randomTable = generateCostTable(size, GenerationMode.RANDOM);
-        Integer[][] dependentTable = generateCostTable(size, GenerationMode.DEPENDENT);
+        String[] files = null;
+        Integer[] sizesToGenerate = null;
+        for (String arg : args) {
+            if (arg.startsWith("-f:")) {
+                files = arg.substring(3).split(",");
+            }
 
-        System.out.println("+==========================================+");
-        System.out.println(String.format("Table Size: %s", randomTable.length));
-        System.out.println("+================= RANDOM =================+");
+            if (arg.startsWith("-g:")) {
+                String[] parts = arg.substring(3).split(",");
+                sizesToGenerate = new Integer[parts.length];
+                for (int i = 0; i < sizesToGenerate.length; i++) {
+                    try {
+                        sizesToGenerate[i] = Integer.parseInt(parts[i]);
+                    } catch (NumberFormatException ex) {
+                        System.err.println("Invalid generations size specified: " + parts[i]);
+                    }
+                }
+            }
+        }
 
-        testBruteForce(randomTable);
-        testDivideConquer(randomTable);
-        testDynamic(randomTable);
+        if (files != null) {
+            for (String file : files) {
+                testFromFile(file);
+            }
+        }
 
-        System.out.println("+================ DEPENDENT ===============+");
+        if (sizesToGenerate != null) {
+            for (Integer size : sizesToGenerate) {
+                if (size == null || size < 2) {
+                    continue;
+                }
 
-        testBruteForce(dependentTable);
-        testDivideConquer(dependentTable);
-        testDynamic(dependentTable);
-
-        System.out.println("+==========================================+");
-
-//            size *= 2;
-//        }
+                generateAndSaveCostTable(size, GenerationMode.RANDOM);
+                generateAndSaveCostTable(size, GenerationMode.DEPENDENT);
+            }
+        }
     }
 
     /**
