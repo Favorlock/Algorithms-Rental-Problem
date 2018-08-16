@@ -38,7 +38,30 @@ public class tcss343 {
      */
     private static final BigInteger TWO = new BigInteger("2");
 
+    /**
+     * Separator used in print messages.
+     */
     private static final String SEPARATOR = "============================================================";
+
+    /**
+     * Max dimension the brute force algorithm should test.
+     */
+    private static int bruteForceLimit = Integer.MAX_VALUE;
+
+    /**
+     * Max dimension the divide and conquer algorithm should test.
+     */
+    private static int divideConquerLimit = Integer.MAX_VALUE;
+
+    /**
+     * Max dimension the dynamic programming algorithm should test.
+     */
+    private static int dynamicLimit = Integer.MAX_VALUE;
+
+    /**
+     * Whether or not to perform test on after generating a table.
+     */
+    private static boolean testGenerated = false;
 
     /**
      * Generate a random integer from MIN_BOUND to MAX_BOUND (inclusive).
@@ -83,7 +106,7 @@ public class tcss343 {
         return costTable;
     }
 
-    private static void generateAndSaveCostTable(int size, GenerationMode mode) {
+    private static Integer[][] generateAndSaveCostTable(int size, GenerationMode mode) {
         Integer[][] costTable = generateCostTable(size, mode);
         File file = new File(String.format("./%sCostTable%s.txt", mode.name(), size));
 
@@ -116,6 +139,8 @@ public class tcss343 {
         } catch (Exception ex) {
             System.err.println("An error occurred while writing a table to file: " + file.toString());
         }
+
+        return costTable;
     }
 
     /**
@@ -321,6 +346,10 @@ public class tcss343 {
      * @param costTable the cost chart
      */
     public static void testBruteForce(Integer[][] costTable) {
+        if (costTable.length > bruteForceLimit) {
+            return;
+        }
+
         // Find the cheapest sequence for the provided cost chart
         Result result = findCheapestRentalSequenceBruteForce(costTable);
 
@@ -338,6 +367,10 @@ public class tcss343 {
      * @param costTable the cost chart
      */
     public static void testDivideConquer(Integer[][] costTable) {
+        if (costTable.length > divideConquerLimit) {
+            return;
+        }
+
         // Find the cheapest sequence for the provided cost chart
         Result result = findCheapestRentalSequenceDivideConquer(costTable);
 
@@ -355,6 +388,10 @@ public class tcss343 {
      * @param costTable the cost chart
      */
     public static void testDynamic(Integer[][] costTable) {
+        if (costTable.length > dynamicLimit) {
+            return;
+        }
+
         // Find the cheapest sequence for the provided cost chart
         Result result = findCheapestRentalSequenceDynamic(costTable);
 
@@ -430,6 +467,8 @@ public class tcss343 {
         String[] files = null;
         Integer[] sizesToGenerate = null;
         for (String arg : args) {
+            arg = arg.toLowerCase();
+
             if (arg.startsWith("-f:")) {
                 files = arg.substring(3).split(",");
             }
@@ -445,6 +484,22 @@ public class tcss343 {
                     }
                 }
             }
+
+            if (arg.startsWith("-bfl:")) {
+                bruteForceLimit = Integer.parseInt(arg.substring(5));
+            }
+
+            if (arg.startsWith("-dcl:")) {
+                divideConquerLimit = Integer.parseInt(arg.substring(5));
+            }
+
+            if (arg.startsWith("-dpl:")) {
+                dynamicLimit = Integer.parseInt(arg.substring(5));
+            }
+
+            if (arg.equals("-tg")) {
+                testGenerated = true;
+            }
         }
 
         if (files != null) {
@@ -454,13 +509,24 @@ public class tcss343 {
         }
 
         if (sizesToGenerate != null) {
+            List<Integer[][]> costTables = new ArrayList<>();
+
             for (Integer size : sizesToGenerate) {
                 if (size == null || size < 2) {
                     continue;
                 }
 
-                generateAndSaveCostTable(size, GenerationMode.RANDOM);
-                generateAndSaveCostTable(size, GenerationMode.DEPENDENT);
+                costTables.add(generateAndSaveCostTable(size, GenerationMode.RANDOM));
+                costTables.add(generateAndSaveCostTable(size, GenerationMode.DEPENDENT));
+            }
+
+            if (testGenerated) {
+                costTables.forEach(table -> {
+                    System.out.println(SEPARATOR);
+                    System.out.println(String.format("Table Dimension: %s", table.length));
+                    System.out.println(SEPARATOR);
+                    testCostTable(table, true, true, true);
+                });
             }
         }
 
@@ -468,7 +534,11 @@ public class tcss343 {
             StringBuilder builder = new StringBuilder();
             builder.append("optional arguments:\n")
                     .append("  -f:./file.txt,./file2.txt\t\tRuns test for specified files\n")
-                    .append("  -g:5,10,20,40\t\tGenerates and saves tables of specified sizes to files");
+                    .append("  -g:5,10,20,40\t\tGenerates and saves tables of specified sizes to files\n")
+                    .append("  -tg\t\tEnables tests on generated tables\n")
+                    .append("  -bfl:50\t\tSets the max dimension for brute force testing\n")
+                    .append("  -dcl:50\t\tSets the max dimension for divide and conquer testing\n")
+                    .append("  -dpl:50\t\tSets the max dimension for dynamic programming testing");
             System.out.println(builder.toString());
         }
     }
