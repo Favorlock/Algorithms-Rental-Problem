@@ -463,6 +463,14 @@ public class tcss343 {
                 generateAndSaveCostTable(size, GenerationMode.DEPENDENT);
             }
         }
+
+        if (args.length == 0) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("optional arguments:\n")
+                    .append("  -f:./file.txt,./file2.txt\t\tRuns test for specified files\n")
+                    .append("  -g:5,10,20,40\t\tGenerates and saves tables of specified sizes to files");
+            System.out.println(builder.toString());
+        }
     }
 
     /**
