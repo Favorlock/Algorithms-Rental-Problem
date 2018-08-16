@@ -14,7 +14,7 @@ import java.util.Random;
 /**
  * TCSS 343 Assignment 4.
  *
- * Suggested program arguments to match assignment description: -g:25,50,100,200,400,800 -tg -bfl:25 -dcl:25
+ * Suggested program arguments: -g:25,50,100,200,400,800 -tg -bfl:25 -dcl:25
  * Will generate tables of sizes 25, 50, 100, 200, 400, and 800 and save them to file. It will then test
  * each generated table. The brute force and divide and conquer algorithms will only test the first table
  * to avoid extremely long test periods.
